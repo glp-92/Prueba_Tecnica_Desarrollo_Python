@@ -5,7 +5,7 @@ def load_json_file(json_file_path: str) -> dict:
         Carga de fichero json a diccionario desde una ruta dada
     """
     json_file = None
-    if os.path.exists(json_file_path):
+    if json_file_path and os.path.exists(json_file_path):
         with open(json_file_path, 'r') as f:
                 json_file = json.load(f)
     return json_file
