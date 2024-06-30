@@ -48,6 +48,32 @@ Se ha supuesto incierto el tiempo en que el sensor publica mensajes en el canal.
 
 Si el sensor es mockup, al iniciar el main se iniciara una instancia de un publisher que enviará mensajes al topic para ser leído por el cliente.
 
+### Base de datos
+
+- Los datos del sensor en formato 16 bit sin signo de 0-65535
+- Se recibe una lista de 64 valores => por visualizacion en la tabla se tratara de introducir en una unica fila de la tabla. Se dumpeara una lista que se pueda luego leer facilmente, con corchetes y comas
+  - 64 valores * 5 digitos_max + 63 comas + 2 corchetes = 385 caracteres por entrada => `VARCHAR(512)`
+- Se introducira el `timestamp` => `TIMESTAMP` del momento en que se recibe el dato para poder filtrar por temporalidades. En caso de no añadirlo manualmente la base de datos lo incluira siendo su valor el momento de creacion de la fila
+- Se paginarán los resultados para optimización de consultas. No se aplicarán filtros ya que no entra en el scope del enunciado (se obtendran de mas reciente a mas antiguo solamente, filtrando por el identificador del sensor)
+- La estructura de la base de datos sera la siguiente:
+
+  | **sensors** |
+  | --- |
+  | id (int autoincrement primary key) |
+  | ref (varchar 255 not null) |
+
+  | **data** |
+  | --- |
+  | id (int autoincrement primary key) |
+  | read_values (varchar 512 not null) |
+  | timestamp (timestamp) default current timestamp |
+  | sensor_id (int not null) (foreign key => sensors(id)) |
+
+- El sensor con su referencia se introduce manualmente, para posteriormente en el ciclo de programa poder referenciar al mismo. 
+  ```sql
+  INSERT INTO `sensors` (`ref`) VALUES ('5286x');
+  ```
+
 ### Estructura del programa
 
 - cfg => contiene ficheros de configuracion de ser necesarios
@@ -72,6 +98,7 @@ Si el sensor es mockup, al iniciar el main se iniciara una instancia de un publi
 - Se debe validar el formato y longitud de la lectura de datos por parte del consumidor antes de añadir la información a la base de datos (código malicioso contenido en los mensajes, overflow)
 - Otras validaciones de entrada se omitirán por limitaciones de tiempo (lectura de fichero de entorno, configuracion)
 - La detención y ejecución del programa, al no ser indicado el método, se producirá con señales producidas a través de entrada de teclado.
+- Se implementara una interfaz para MySQL, se puede utilizar `sql alchemy` como orm pero se utilizara `mysql-connector` en este caso, para simplificar
 
 ## Setup
 

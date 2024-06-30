@@ -12,10 +12,16 @@ class Main_Client():
     def __init__(self):
         self.load_cfg()
         self.load_log()
+        self.get_cfg_data()
+        self.get_importers()
         self.setup()
-        self.log.info("MAIN:: Systema inicializado")
+        self.log.info("MAIN:: Init System")
         self.run()
         return 
+    
+    def get_cfg_data(self): return 
+
+    def get_importers(self): return 
     
     def setup(self): return
 
@@ -25,14 +31,14 @@ class Main_Client():
         cfg_path = os.environ.get("CFG_PATH")
         self.cfg = load_json_file(cfg_path)
         if self.cfg is None:
-            sys.exit(f"Error: Fichero de configuracion no encontrado en ruta {cfg_path}!")
+            sys.exit(f"Error: Not found cfg on {cfg_path}!")
         return
 
     def load_log(self):
 
         def log_errors(exc_type, exc_value, exc_traceback):
             """
-                Log de las excepciones no controladas que puedan detener la ejecucion del programa
+                Logging unhandled exceptions
             """
             if issubclass(exc_type, KeyboardInterrupt):
                 sys.__excepthook__(exc_type, exc_value, exc_traceback)
@@ -47,7 +53,7 @@ class Main_Client():
             try:
                 os.makedirs(f"{log_dir}")
             except Exception as e:
-                print(f"Error en creacion de directorio de logs => {e}")
+                print(f"Error building log dir => {e}")
         self.log = log_manager.build_logger(
             "main_log",
             log_dir,
