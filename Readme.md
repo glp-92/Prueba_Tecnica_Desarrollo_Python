@@ -48,6 +48,10 @@ Se ha supuesto incierto el tiempo en que el sensor publica mensajes en el canal.
 
 Si el sensor es mockup, al iniciar el main se iniciara una instancia de un publisher que enviará mensajes al topic para ser leído por el cliente.
 
+### Informacion extraida sobre NATS
+
+Conexiones multiplexadas, un cliente se conecta a un servidor NATS, mediante el cual puede acceder a topics mediante 1 o varias suscripciones. La conexion establecida recibe mensajes y los envia a los consumidores configurados. Permite modos de persistencia, clusterización y queues para manejar multiples instancias de consumidores.
+
 ### Base de datos
 
 - Los datos del sensor en formato 16 bit sin signo de 0-65535
@@ -110,3 +114,4 @@ Si el sensor es mockup, al iniciar el main se iniciara una instancia de un publi
 
 - Se ha utilizado IA generativa para generar fragmentos de codigo y agilizar el desarrollo. La solución propuesta es propia sin intervención de chatbots
 - [Repositorio NATS provisto en el enunciado](https://github.com/nats-io/nats.py)
+- [Sistema de distribucion NATS](https://docs.nats.io/nats-concepts/core-nats/pubsub)

@@ -13,3 +13,6 @@ class Sensor_Repository(ABC):
     
     @abstractmethod
     def get_all_values_pageable(self): return
+
+    @abstractmethod
+    def get_sensor_id_by_ref(self): return

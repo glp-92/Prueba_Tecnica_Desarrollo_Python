@@ -89,6 +89,17 @@ class MySQL_Sensor_Repository(Sensor_Repository):
         finally:
             cursor.close()
 
+    def get_sensor_id_by_ref(self, sensor_ref):
+        cursor = self.mysql_connection.cursor(dictionary=True)
+        query = ("SELECT id FROM sensors s WHERE s.ref = %s")
+        try:
+            cursor.execute(query, (sensor_ref,))
+        except Error as e:
+            self.log.error(f"SENSOR_REPO:: Error retrieving sensor identifier: {e}")
+            return None
+        results = cursor.fetchone()
+        return results.get('id')
+
 
 
 
@@ -131,3 +142,4 @@ if __name__ == '__main__':
     mysql_repository.insert_new_value(sensor_id=sensor_id, timestamp=timestamp, values_to_insert=values)
     values, total_pages = mysql_repository.get_values_by_sensor_id_pageable(sensor_id=1, page=1, values_per_page=5)
     print(values, total_pages, "size", len(values))
+    print(mysql_repository.get_sensor_id_by_ref('5286x'))
