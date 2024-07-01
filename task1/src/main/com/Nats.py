@@ -167,11 +167,8 @@ if __name__ == '__main__':
         nats_listener = Nats_Client({}, log, "consumer")
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        print(1)
         loop.run_until_complete(nats_listener.connect("nats://demo.nats.io:4222"))
-        print(1)
         loop.run_until_complete(nats_listener.subscribe_to_channel('test_channel', on_message_received))
-        print(1)
         loop.run_forever()
 
     with ProcessPoolExecutor(2) as executor:

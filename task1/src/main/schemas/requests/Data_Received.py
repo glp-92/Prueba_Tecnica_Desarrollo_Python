@@ -20,7 +20,7 @@ class Data_Received:
                 raise ValueError("bad data format for values")
             if False in [isinstance(value, int) for value in self.values]:
                 raise ValueError("data format invalid")
-            if list(filter(lambda value: value >= 65536, self.values)) != []: # Algun valor por encima del desborde
+            if list(filter(lambda value: value >= 65535, self.values)) != []: # Algun valor por encima del desborde
                 raise ValueError("bad value range")
             
         validate_id()
