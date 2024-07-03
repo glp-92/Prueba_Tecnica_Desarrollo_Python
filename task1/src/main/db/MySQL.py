@@ -1,5 +1,6 @@
 from mysql import connector
 from mysql.connector import Error
+import os
 
 class MySQL:
     """
@@ -13,28 +14,22 @@ class MySQL:
         INSERT INTO `sensors` (`ref`) VALUES ('5286x');
     """
 
-    def __init__(self, cfg, log):
-        self.cfg = cfg 
+    def __init__(self, log, db_url):
         self.log = log
+        self.db_url = db_url
         self.get_cfg_data()
-        self.get_importers()
         self.connect()
         # err = self.setup() # llamada desde el main para controlar el error y cerrar el programa
 
     def get_cfg_data(self):
-        self.url = self.cfg['db']['url']
-        self.user = self.cfg['db']['user']
-        self.password = self.cfg['db']['password']
-        self.db_name = self.cfg['db']['db_name']
-
-    def get_importers(self): return
+        self.db_name = os.environ.get('DB_NAME')
 
     def connect(self):
         try:
             self.connection = connector.connect(
-                host=self.url, 
-                user=self.user,
-                password=self.password
+                host=self.db_url, 
+                user=os.environ.get('DB_USR'),
+                password=os.environ.get('DB_PWD')
             )
             if self.connection.is_connected():
                 self.log.info(f"DB:: connection to MySQL database successful!")

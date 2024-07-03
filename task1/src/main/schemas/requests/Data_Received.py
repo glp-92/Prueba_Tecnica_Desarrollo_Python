@@ -5,14 +5,14 @@ import json
 class Data_Received:
 
     def __init__(self, **kwargs):
-        self.sensor_id = kwargs.get('id')
+        self.sensor_ref = kwargs.get('ref')
         self.values = kwargs.get('values')
         self.validate_fields()
 
     def validate_fields(self):
 
         def validate_id():
-            if not self.sensor_id or not isinstance(self.sensor_id, int):
+            if not self.sensor_ref or not isinstance(self.sensor_ref, str):
                 raise ValueError("bad id received")
 
         def validate_values():
@@ -27,10 +27,10 @@ class Data_Received:
         validate_values()
 
     def to_string(self):
-        return json.dumps({'id': self.sensor_id, 'values': self.values})
+        return json.dumps({'id': self.sensor_ref, 'values': self.values})
     
     def model_dump(self):
-        return {'id': self.sensor_id, 'values': self.values}
+        return {'id': self.sensor_ref, 'values': self.values}
 
 
 
@@ -39,7 +39,7 @@ class Data_Received:
 if __name__ == '__main__':
     data = {
         "values": [2,1,3],
-        "id": 1
+        "ref": 1
     }
     new_data = Data_Received(**data).model_dump()
     print(new_data)

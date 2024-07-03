@@ -1,5 +1,4 @@
-logs
-*.log
+**.log
 .vscode 
 .idea 
 __pycache__

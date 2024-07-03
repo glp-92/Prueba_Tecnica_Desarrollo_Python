@@ -26,20 +26,11 @@ class Nats_Client:
             return
         
 
-    def __init__(self, cfg: str, log, client_id: str):
-        self.cfg = cfg 
+    def __init__(self, log, client_id: str):
         self.log = log
         self.client_id = client_id
-        self.get_cfg_data()
-        self.get_importers()
         self.setup()
         return 
-    
-
-    def get_cfg_data(self): return 
-
-
-    def get_importers(self): return
 
 
     def setup(self): 
@@ -57,16 +48,16 @@ class Nats_Client:
         """
 
         async def on_disconnected():
-            self.log.warning(f'CLIENT_{self.client_id}:: Disconnected!')
+            self.log.warning(f'NATS_CLIENT_{self.client_id}:: Disconnected!')
         
         async def on_reconnected():
-            self.log.info(f'CLIENT_{self.client_id}:: Reconnection successful!')
+            self.log.info(f'NATS_CLIENT_{self.client_id}:: Reconnection successful!')
 
         async def on_close_conn(e):
-            self.log.warning(f'CLIENT_{self.client_id}:: Connection closed!')
+            self.log.warning(f'NATS_CLIENT_{self.client_id}:: Connection closed!')
 
         async def on_error(e):
-            self.log.error(f'CLIENT_{self.client_id}:: Error on server: {e}')
+            self.log.error(f'NATS_CLIENT_{self.client_id}:: Error on server: {e}')
 
         try:
             self.nc = await nats.connect(
@@ -78,11 +69,11 @@ class Nats_Client:
                 name = self.client_id
             )
             self.connection_status.connected_to_server = True
-            self.log.info(f'CLIENT_{self.client_id}:: Client successfully connected!')
+            self.log.info(f'NATS_CLIENT_{self.client_id}:: Client successfully connected!')
         except NoServersError as e:
             self.connection_status.connected_to_server = False
             self.nc = None
-            self.log.error(f'CLIENT_{self.client_id}:: Error on connecting server: {e}')
+            self.log.error(f'NATS_CLIENT_{self.client_id}:: Error on connecting server: {e}')
         return
     
 
@@ -103,14 +94,14 @@ class Nats_Client:
                 on_msg_recv_callback: function called when a msg is received on the channel
         """
         if not self.connection_status.connected_to_server:
-            self.log.error(f'CLIENT_{self.client_id}:: Client is not connected, cannot subscribe to channels')
+            self.log.error(f'NATS_CLIENT_{self.client_id}:: Client is not connected, cannot subscribe to channels')
             return
         if channel_name in self.connection_status.listening_channels:
-            self.log.warning(f'CLIENT_{self.client_id}:: Already subscribed to channel {channel_name}')
+            self.log.warning(f'NATS_CLIENT_{self.client_id}:: Already subscribed to channel {channel_name}')
             return
         subscription = await self.nc.subscribe(channel_name, cb=on_msg_recv_callback)
         self.connection_status.listening_channels[channel_name] = {'subscription': subscription}
-        self.log.info(f'CLIENT_{self.client_id}:: Successfully connected to channel {channel_name}')
+        self.log.info(f'NATS_CLIENT_{self.client_id}:: Successfully connected to channel {channel_name}')
 
 
     async def unsuscribe_to_channel(self, channel_name: str):
@@ -124,14 +115,14 @@ class Nats_Client:
             Send a message to a channel
         """
         if not self.connection_status.connected_to_server:
-            self.log.error(f'CLIENT_{self.client_id}:: Client is not connected, cannot send messages')
+            self.log.error(f'NATS_CLIENT_{self.client_id}:: Client is not connected, cannot send messages')
             return
         if not self.connection_status.listening_channels[channel_name]:
-            self.log.error(f'CLIENT_{self.client_id}:: Trying to send a message to a not subbed channel!')
+            self.log.error(f'NATS_CLIENT_{self.client_id}:: Trying to send a message to a not subbed channel!')
             return
-        self.log.info(f'CLIENT_{self.client_id}:: Publishing message "{message}" to channel {channel_name}')
+        self.log.info(f'NATS_CLIENT_{self.client_id}:: Publishing message "{message}" to channel {channel_name}')
         await self.nc.publish(channel_name, message.encode())
-        self.log.info(f'CLIENT_{self.client_id}:: Message "{message}" published to channel {channel_name} successfully!')
+        self.log.info(f'NATS_CLIENT_{self.client_id}:: Message "{message}" published to channel {channel_name} successfully!')
 
 
 

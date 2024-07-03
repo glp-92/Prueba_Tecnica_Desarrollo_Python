@@ -2,23 +2,19 @@ from typing import List
 import json, math
 from mysql.connector import Error
 
-from Sensor_Repository import Sensor_Repository
+from data.Sensor_Repository import Sensor_Repository
 
 class MySQL_Sensor_Repository(Sensor_Repository):
     """
     Class that inherits repository interface, must specify abstract methods
     """
 
-    def __init__(self, cfg, log, mysql_connection):
-        self.cfg = cfg 
+    def __init__(self, log, mysql_connection):
         self.log = log
         self.mysql_connection = mysql_connection
 
-    def get_cfg_data(self): return 
-
-    def get_importers(self): return
-
     def insert_new_value(self, sensor_id: int, timestamp, values_to_insert: List):
+        err = 1
         cursor = self.mysql_connection.cursor()
         query = 'INSERT INTO data (sensor_id, timestamp, read_values) VALUES (%s, %s, %s)'
         try:
@@ -26,9 +22,11 @@ class MySQL_Sensor_Repository(Sensor_Repository):
             cursor.execute(query, (sensor_id, timestamp, values_json))
             self.mysql_connection.commit()
             self.log.info(f"SENSOR_REPO:: Values inserted on DB")
+            err = 0
         except Error as e:
             self.mysql_connection.rollback()
             self.log.error(f"SENSOR_REPO:: Error while inserting values on DB: {e}")
+            return err
         finally:
             cursor.close()
 
@@ -58,7 +56,7 @@ class MySQL_Sensor_Repository(Sensor_Repository):
         except Error as e:
             self.log.error(f"SENSOR_REPO:: Error retrieving values: {e}")
             return [], total_pages
-        finally:
+        finally: # After except return, closes cursor
             cursor.close()
 
     

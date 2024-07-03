@@ -1,37 +1,36 @@
-import sys, os 
+import sys, os, signal, time
 from dotenv import load_dotenv
 
-from util.json_utils import load_json_file
 from log.Logger import Logger
+from controller.Sensor_Controller import Sensor_Controller
+from data.MySQL_Sensor_Repository import MySQL_Sensor_Repository
+from db.MySQL import MySQL
+from com.Nats import Nats_Client
 
-load_dotenv(os.path.join(os.path.abspath('./'), '.env'))
+load_dotenv(os.path.join(os.path.abspath('../../'), '.env'))
 
 
 class Main_Client():
 
+    db_url = 'localhost'
+
     def __init__(self):
-        self.load_cfg()
         self.load_log()
-        self.get_cfg_data()
         self.get_importers()
-        self.setup()
         self.log.info("MAIN:: Init System")
-        self.run()
+        signal.signal(signal.SIGINT, self.run) # CTRL + C calls run??
+        
+
+    def get_importers(self): 
+        self.mysql_client = MySQL(self.log, db_url=self.db_url)
+        self.sensor_repository = MySQL_Sensor_Repository(self.log, mysql_connection=self.mysql_client.connection)
+        self.nats_client = Nats_Client(self.log, client_id=os.environ.get('CLIENT_ID'))
+        self.sensor_controller = Sensor_Controller(self.log, nats_client=self.nats_client, sensor_repository=self.sensor_repository)
         return 
-    
-    def get_cfg_data(self): return 
 
-    def get_importers(self): return 
-    
-    def setup(self): return
-
-    def run(self): return
-    
-    def load_cfg(self):
-        cfg_path = os.environ.get("CFG_PATH")
-        self.cfg = load_json_file(cfg_path)
-        if self.cfg is None:
-            sys.exit(f"Error: Not found cfg on {cfg_path}!")
+    def run(self, sig, frame):
+        loop = self.sensor_controller.setup_topic_handlers()
+        self.sensor_controller.listen(loop=loop)
         return
 
     def load_log(self):
@@ -57,7 +56,7 @@ class Main_Client():
         self.log = log_manager.build_logger(
             "main_log",
             log_dir,
-            storage_days=self.cfg.get('log').get('log_storage_days'),
+            storage_days=os.environ.get("LOG_STORAGE_DAYS"),
             console_handler=True,
         )
         sys.excepthook = log_errors
@@ -68,3 +67,5 @@ class Main_Client():
     
     
 main = Main_Client()
+while True:
+    time.sleep(0.1) # thread not exhausted
