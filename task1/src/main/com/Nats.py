@@ -81,7 +81,9 @@ class Nats_Client:
         """
             gracefully disconnects from server waiting for message completion
         """
-        await self.nc.drain()
+        if self.nc.is_closed: return
+        await self.nc.close()
+        await asyncio.sleep(0)
         self.connection_status.connected_to_server = False
         return
 

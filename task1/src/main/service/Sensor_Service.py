@@ -1,11 +1,29 @@
 from typing import Dict
 from datetime import datetime
+from queue import Queue
 
 class Sensor_Service:
 
     def __init__(self, log, sensor_repository):
         self.log = log 
         self.sensor_repository = sensor_repository
+        self.sensor_read_queue = Queue()
+
+    def add_reading_to_queue(self, reading_data):
+        """
+            Add a reading on dict format to a queue
+        """
+        self.sensor_read_queue.put(reading_data, timeout=0.1)
+        return
+    
+    def push_readings_to_db(self):
+        """
+            Push all sensor values to database
+        """
+        while not self.sensor_read_queue.empty():
+            self.log.info("SENSOR_SERVICE:: Añadiendo lectura a DB")
+            self.add_new_reading_to_db(self.sensor_read_queue.get(timeout=0.1))        
+        return
 
     def add_new_reading_to_db(self, new_msg_from_sensor: Dict):
         sensor_ref = new_msg_from_sensor.sensor_ref
