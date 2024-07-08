@@ -2,6 +2,10 @@ import asyncio, random, json, sys, argparse
 
 from com.Nats import Nats_Client
 
+"""
+    python mock_publisher.py --sendtime 1 --valrange 0-1000
+"""
+
 parser = argparse.ArgumentParser(description='Programa mockup de sensor')
 parser.add_argument('--sendtime', type=int, required=True, help='Frecuencia de envio (en s) de los datos del sensor')
 parser.add_argument('--valrange', type=str, required=True, default="0-3000", help='Rango de valores si el sensor esta simulado')

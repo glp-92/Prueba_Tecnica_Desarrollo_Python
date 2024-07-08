@@ -4,7 +4,7 @@
         sensorfreq: frecuencia de lectura de datos del sensor
         valrange: rango valores del sensor mockup si es simulado
         dburi: uri de db
-    python main.py --mockupsensor=True --valrange=0-1000 --sensorfreq=1 --dburl=localhost
+    python main.py  --mockupsensor True --sampletime 5 --dburl localhost
 """
 import sys, os, signal, time, argparse
 from dotenv import load_dotenv

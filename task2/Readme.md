@@ -16,6 +16,7 @@ estructura.
 ♦ Se tienen diferentes tipos de sensores (infrarrojo, ambiental, etc) y es posible tener varios
 sensores del mismo tipo en el mismo dispositivo. La selección de estos sensores se realiza en el
 momento de la ejecución del programa.
+
 ♦ Debido a que cada sensor es de diferente índole, cada uno de ellos presenta una estructura de
 datos diferente para su configuración (esta estructura no está definida en esta tarea)
 
@@ -41,7 +42,7 @@ Se adjunta un diagrama de arquitectura donde se muestran los elementos que podri
 - NATS Jetstream Cluster: uno / varias máquinas que conforman el cluster donde se reciben y consumen los mensajes de los sensores.
 - Consumers: procesos que consumen los topics del cluster. Pueden consumir en batches o en tiempo real. Se consideraría la solución de Apache Airflow para ingesta por batches de los clusters nats, y definir procesos que procesen esos datos para añadirlos a la base de datos.
 - Dashboard: aplicación web que permite a usuarios visualizar datos. Tipicamente, como OpenSource, se podría utilizar Kibana.
-- Database: SQL, contiene los datos de los sensores. Por seguridad se sugiere tener una réplica de la base de datos. No recomendable una solución de almacenamiento replicado como RAID1 ya que la corrupción de los datos afectaría a todos los discos implicados en la réplica.
+- Database: SQL, contiene los datos de los sensores. Por seguridad se sugiere tener una réplica de la base de datos. No recomendable una solución de almacenamiento replicado como RAID1 ya que una posible corrupcion de los datos afectaría a todos los discos implicados en la réplica.
 
 ## Comunicaciones
 
