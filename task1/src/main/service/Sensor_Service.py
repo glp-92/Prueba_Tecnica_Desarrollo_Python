@@ -34,7 +34,7 @@ class Sensor_Service:
             raise ValueError("Ref doesn't exist on DB!")
         err = self.sensor_repository.insert_new_value(
             sensor_id=sensor_id, 
-            timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+            timestamp=new_msg_from_sensor.timestamp, 
             values_to_insert=new_msg_from_sensor.values
         )
         if err: 

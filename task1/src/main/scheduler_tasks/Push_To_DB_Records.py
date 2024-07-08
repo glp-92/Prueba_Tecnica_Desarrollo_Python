@@ -2,6 +2,9 @@ import asyncio
 
 
 class Push_To_DB_Records:
+    """
+    Class that is executed on an scheduled time and push data to DB if exists
+    """
 
     def __init__(self, log, sensor_service, push_frequency):
         self.log = log

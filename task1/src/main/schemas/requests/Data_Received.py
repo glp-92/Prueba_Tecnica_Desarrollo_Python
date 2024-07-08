@@ -1,5 +1,6 @@
 from typing import List
 import json 
+from datetime import datetime
 
 
 class Data_Received:
@@ -7,6 +8,7 @@ class Data_Received:
     def __init__(self, **kwargs):
         self.sensor_ref = kwargs.get('ref')
         self.values = kwargs.get('values')
+        self.timestamp = datetime.now().isoformat()
         self.validate_fields()
 
     def validate_fields(self):
@@ -27,10 +29,10 @@ class Data_Received:
         validate_values()
 
     def to_string(self):
-        return json.dumps({'id': self.sensor_ref, 'values': self.values})
+        return json.dumps({'id': self.sensor_ref, 'values': self.values, 'timestamp': self.timestamp})
     
     def model_dump(self):
-        return {'id': self.sensor_ref, 'values': self.values}
+        return {'id': self.sensor_ref, 'values': self.values, 'timestamp': self.timestamp}
 
 
 

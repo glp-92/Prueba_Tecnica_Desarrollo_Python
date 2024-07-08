@@ -18,13 +18,13 @@ def str_to_bool(value):
 
 parser = argparse.ArgumentParser(description='Programa principal:: Predicción de precio de vivienda')
 parser.add_argument('--mockupsensor', type=str, required=True, help='True para simular un sensor que envia datos')
-parser.add_argument('--sensorfreq', type=float, required=True, help='Frecuencia de lectura (en s) de los datos que envia el sensor')
+parser.add_argument('--sampletime', type=float, required=True, help='Frecuencia de lectura (en s) de los datos que envia el sensor')
 parser.add_argument('--valrange', type=str, required=False, help='Rango de valores si el sensor esta simulado')
 parser.add_argument('--dburl', type=str, required=True, help='Direccion de la base de datos')
 args = parser.parse_args()
 
 mockup_sensor = str_to_bool(args.mockupsensor)
-sensorfreq = args.sensorfreq
+sampletime = args.sampletime
 valrange = args.valrange
 if mockup_sensor:
     if valrange:
@@ -38,7 +38,7 @@ db_url = args.dburl
 
 from log.Logger import Logger
 from controller.Sensor_Controller import Sensor_Controller
-from data.MySQL_Sensor_Repository import MySQL_Sensor_Repository
+from data.MySQL_Sensor_Repository_Impl import MySQL_Sensor_Repository_Impl
 from db.MySQL import MySQL
 from com.Nats import Nats_Client
 from scheduler_tasks.Push_To_DB_Records import Push_To_DB_Records
@@ -48,7 +48,6 @@ load_dotenv(os.path.join(os.path.abspath('../../'), '.env'))
 
 class Main_Client():
 
-    start = True
     push_to_db_task_thread = None
     topic_listener_thread = None
 
@@ -56,23 +55,18 @@ class Main_Client():
         self.load_log()
         self.get_importers()
         self.log.info("MAIN:: System Ready")
-        self.set_run_stop_signal()
-        return
-
-    def set_run_stop_signal(self):
-        signal.signal(signal.SIGTSTP, self.run) # CTRL + Z calls run?
         return
 
     def get_importers(self): 
         self.mysql_client = MySQL(self.log, db_url=db_url)
-        self.sensor_repository = MySQL_Sensor_Repository(self.log, mysql_connection=self.mysql_client.connection)
+        self.sensor_repository = MySQL_Sensor_Repository_Impl(self.log, mysql_connection=self.mysql_client.connection)
         self.nats_client = Nats_Client(self.log, client_id=os.environ.get('CLIENT_ID'))
         self.sensor_service = Sensor_Service(self.log, self.sensor_repository)
         self.sensor_controller = Sensor_Controller(self.log, nats_client=self.nats_client, sensor_service=self.sensor_service)
-        self.push_to_db_records = Push_To_DB_Records(self.log, sensor_service=self.sensor_service, push_frequency=sensorfreq)
+        self.push_to_db_records = Push_To_DB_Records(self.log, sensor_service=self.sensor_service, push_frequency=sampletime)
         return 
 
-    def run(self, sig, frame):
+    def run(self):
         signal.signal(signal.SIGTSTP, signal.SIG_IGN) # signal disconnect
 
         def run_topic_listener():
@@ -83,22 +77,19 @@ class Main_Client():
             self.push_to_db_records.setup_signal_handlers()
             self.push_to_db_records.start()
         
-        if self.start:
-            self.push_to_db_task_thread = Thread(target=run_push_to_db_cycle, daemon=True)
-            self.push_to_db_task_thread.start()
-            self.topic_listener_thread = Thread(target=run_topic_listener, daemon=True)
-            self.topic_listener_thread.start()
-
-        else:
-            self.push_to_db_records.stop()
-            self.push_to_db_task_thread.join()
-            self.push_to_db_task_thread = None # Reusable thread var
-            self.sensor_controller.stop()
-            self.topic_listener_thread.join()
-            self.topic_listener_thread = None # Reusable thead var
-
-        self.start = not self.start
-        signal.signal(signal.SIGTSTP, self.run) # signal reconnect
+        self.push_to_db_task_thread = Thread(target=run_push_to_db_cycle, daemon=True)
+        self.push_to_db_task_thread.start()
+        self.topic_listener_thread = Thread(target=run_topic_listener, daemon=True)
+        self.topic_listener_thread.start()
+        return
+    
+    def stop(self):
+        self.push_to_db_records.stop()
+        self.push_to_db_task_thread.join()
+        self.push_to_db_task_thread = None # Reusable thread var
+        self.sensor_controller.stop()
+        self.topic_listener_thread.join()
+        self.topic_listener_thread = None # Reusable thead varç
         return
 
     def load_log(self):
@@ -133,5 +124,6 @@ class Main_Client():
 
 if __name__ == "__main__":
     main = Main_Client()
+    main.run()
     while True:
         time.sleep(0.1) # thread not exhausted

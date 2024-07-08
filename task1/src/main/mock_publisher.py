@@ -1,7 +1,21 @@
-import asyncio, random, json, sys
+import asyncio, random, json, sys, argparse
 
 from com.Nats import Nats_Client
 
+parser = argparse.ArgumentParser(description='Programa mockup de sensor')
+parser.add_argument('--sendtime', type=int, required=True, help='Frecuencia de envio (en s) de los datos del sensor')
+parser.add_argument('--valrange', type=str, required=True, default="0-3000", help='Rango de valores si el sensor esta simulado')
+args = parser.parse_args()
+
+send_time = args.sendtime
+valrange = args.valrange
+if valrange:
+    try:
+        range_values = list(map(lambda v: int(v), valrange.split("-")))
+        range_values = (min(range_values), max(range_values))
+        if range_values[0] < 0 or range_values[1] > 65535: raise argparse.ArgumentTypeError("Out of range int16")
+    except Exception as e:
+        raise argparse.ArgumentTypeError('Expected range expressed by "minval-maxval"')
 
 class Log:
     def info(self, msg):
@@ -17,7 +31,7 @@ class Log:
 async def send_message_loop(nats_client, delay):
     while True:
         print("Enviando mensaje al canal...")
-        data = {"ref": "5286x", "values": [random.randint(0, 100) for _ in range(65)]}
+        data = {"ref": "5286x", "values": [random.randint(range_values[0], range_values[1]) for _ in range(65)]}
         await nats_client.publish_message_to_channel("test_channel", json.dumps(data))
         await asyncio.sleep(delay)
 

@@ -4,7 +4,7 @@ from mysql.connector import Error
 
 from data.Sensor_Repository import Sensor_Repository
 
-class MySQL_Sensor_Repository(Sensor_Repository):
+class MySQL_Sensor_Repository_Impl(Sensor_Repository):
     """
     Class that inherits repository interface, must specify abstract methods
     """
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     if err: sys.exit()
 
     try:
-        mysql_repository = MySQL_Sensor_Repository(cfg, Log(), db.connection)
+        mysql_repository = MySQL_Sensor_Repository_Impl(cfg, Log(), db.connection)
     except TypeError as e:
         print(f"No se han definido los metodos abstractos de la interfaz: {e}")
         sys.exit()

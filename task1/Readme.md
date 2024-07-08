@@ -87,39 +87,50 @@ Conexiones multiplexadas, un cliente se conecta a un servidor NATS, mediante el 
 
 ## Estructura del programa
 
-- log => directorio donde se almacenan los logs de programa
-- src => modulos de la aplicacion principal
-  - main => contiene los módulos del programa principal.
-    - main.py => ejecución principal. Contempla y valida los argumentos de entrada. Importa las dependencias y las inyecta en módulos de lógica atendiendo al principio de inversión de dependencia (en lugar de importar los módulos en las clases que se necesiten, se pasan por parámetros en la inicialización, favorenciendo la trazabilidad del programa). Crea el log, la configuración y lanza los ciclos de programa.
-    - mocked_publiser.py => ejecucion de sensor simulado. Se debería llamar desde el main en un subproceso.
-    - util => directorio que contiene utilidades (modulo de lectura / escritura de ficheros)
-    - log => directorio que contiene la declaración del logger
-    - schemas => contiene contratos para validacion de datos
-    - db => contiene la declaración de la clase de conexión a base de datos
-    - data => contiene los repositorios de datos, funciones que abstraen el acceso a los datos independientemente del cliente de BBDD (si se migra base de datos, se cambia el contenido de las funciones y el cliente, pero los nombres permaneceran intactos)
-    - controller => en diseño web en arquitectura limpia contiene los endpoints y las llamadas a la logica del programa. En este caso contendrá la lógica de las ejecuciones que se desee realizar
-    - com => se plantea como como un directorio apropiado para la declaración de una clase `nats` que implemente funciones y módulos de utilidad
-    - scheduler_tasks => se añade este directorio para las tareas que se ejecuten programadas en la aplicacion, como el traspaso de informacion a la base de datos en este caso.
-  - test => contendrá pruebas de integración (el ciclo se cumple con las interacciones de forma esperada). Las pruebas unitarias, de haberlas se ejecutarán en cada módulo por separado.
-- .env => en .gitignore para evitar leaks de informacion. Contiene variables de entorno que se estimen oportunas. Si el usuario del equipo se compromete, estas variables serán visibles a un posible atacante.
+- `log` => directorio donde se almacenan los logs de programa
+- `src` => modulos de la aplicacion principal
+  - `main` => contiene los módulos del programa principal.
+    - `main.py` => ejecución principal. Contempla y valida los argumentos de entrada. Importa las dependencias y las inyecta en módulos de lógica atendiendo al principio de inversión de dependencia (en lugar de importar los módulos en las clases que se necesiten, se pasan por parámetros en la inicialización, favorenciendo la trazabilidad del programa). Crea el log, la configuración y lanza los ciclos de programa.
+    - `mock_publisher.py` => ejecucion de sensor simulado. Se debería llamar desde el main en un subproceso.
+    - `util` => directorio que contiene utilidades (modulo de lectura / escritura de ficheros)
+    - `log` => directorio que contiene la declaración del logger
+    - `schemas` => contiene contratos para validacion de datos
+    - `db` => contiene la declaración de la clase de conexión a base de datos
+    - `data` => contiene los repositorios de datos, funciones que abstraen el acceso a los datos independientemente del cliente de BBDD (si se migra base de datos, se cambia el contenido de las funciones y el cliente, pero los nombres permaneceran intactos)
+    - `controller` => en diseño web en arquitectura limpia contiene los endpoints y las llamadas a la logica del programa. En este caso contendrá la lógica de las ejecuciones que se desee realizar
+    - `com` => se plantea como como un directorio apropiado para la declaración de una clase `nats` que implemente funciones y módulos de utilidad
+    - `scheduler_tasks` => se añade este directorio para las tareas que se ejecuten programadas en la aplicacion, como el traspaso de informacion a la base de datos en este caso.
+  - `test` => contendrá pruebas de integración (el ciclo se cumple con las interacciones de forma esperada). Las pruebas unitarias, de haberlas se ejecutarán en cada módulo por separado.
+- `.env` => en .gitignore para evitar leaks de informacion. Contiene variables de entorno que se estimen oportunas. Si el usuario del equipo se compromete, estas variables serán visibles a un posible atacante.
 
 ## Setup
 
 1. Se emplea `Anaconda` como gestor de librerias => `conda create -n natsclient python=3.10 anaconda`.
 2. Activar entorno en bash dentro de la raiz del programa => `conda activate natsclient`
 3. Instalar librerias que emplea la aplicacion `pip install -r requirements.txt`
+4. Fichero de entorno ejemplo
+  ```env
+  CLIENT_ID=consumer
+  LOG_DIR=ruta absoluta a directorio de almacenamiento de logs
+  LOG_STORAGE_DAYS=dias que se almacenan los logs
+  NATS_SERVER_URL=nats://demo.nats.io:4222 (url del servidor nats)
+  NATS_SENSOR_CHANNEL=test_channel (nombre del canal del servidor a consumir)
+  DB_NAME=nats
+  DB_USR=dbusr
+  DB_PWD=pwd
+  ```
 
 ## Ejecucion
 
 Programa principal
 ```bash
 cd src/main
-python main.py --mockupsensor=True --valrange=0-1000 --sensorfreq=1 --dburl=localhost
+python main.py --mockupsensor=True --valrange=0-1000 --sampletime=1 --dburl=localhost
 ```
 Sensor mockup
 ```bash
 cd src/main
-python mocked_publisher.py
+python mock_publisher.py --sendtime=2 --valrange=0-2000
 ```
 
 ## Referencias
