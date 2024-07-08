@@ -1,41 +1,45 @@
-import os, asyncio, time
+import os, asyncio, json
 
 from schemas.requests.Data_Received import Data_Received
-from service.Sensor_Service import Sensor_Service
+
 
 class Sensor_Controller:
 
-    def __init__(self, log, nats_client, sensor_repository):
+    def __init__(self, log, nats_client, sensor_service):
         self.log = log 
         self.nats_client = nats_client
-        self.sensor_repository = sensor_repository
+        self.sensor_service = sensor_service
         self.get_importers()
-        self.running = False
 
-    def get_importers(self): 
-        self.sensor_service = Sensor_Service(self.log, self.sensor_repository)
+    def get_importers(self):
         return 
     
-    def setup_handlers(self): # Call from main (start-stop)
-        asyncio.run(self.nats_client.connect(os.environ.get("NATS_SERVER_URL")))
-        asyncio.run(self.nats_client.subscribe_to_channel(os.environ.get('NATS_SENSOR_CHANNEL'), self.on_sensor_data_received))
+    def setup_topic_handlers(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_until_complete(self.nats_client.connect(os.environ.get('NATS_SERVER_URL')))
+        self.loop.run_until_complete(self.nats_client.subscribe_to_channel(os.environ.get('NATS_SENSOR_CHANNEL'), self.on_sensor_data_received))
     
-    def listen(self, time_to_sleep_seconds):
-        self.running = False
-        self.log.info("SENSOR_CONTROLLER:: Listening...")
-        while not self.running:
-            self.log.info(f"SENSOR_CONTROLLER:: Pushing readings to DB...")
-            self.push_readings_to_db()
-            time.sleep(time_to_sleep_seconds)
-        asyncio.run(self.nats_client.unsuscribe_to_channel(os.environ.get('NATS_SENSOR_CHANNEL')))
-        self.log.info("SENSOR_CONTROLLER:: Unsubbed to channel")
-        asyncio.run(self.nats_client.disconnect())
+    def start(self):
+        async def listen():
+            self.log.info("SENSOR_CONTROLLER:: Begining loop...")
+            while not self.stop_event.is_set():
+                await asyncio.sleep(0.1) # Avoid cpu overload
+            self.log.info("SENSOR_CONTROLLER:: Exiting loop...")
+            await self.nats_client.unsubscribe_to_channel(os.environ.get('NATS_SENSOR_CHANNEL'))
+            await self.nats_client.disconnect()
+        self.stop_event = asyncio.Event()
+        self.loop.run_until_complete(listen())
 
+    def stop(self):
+        self.stop_event.set()
+        return
 
     async def on_sensor_data_received(self, new_msg_from_sensor):
         try:
-            new_msg_from_sensor = Data_Received(**new_msg_from_sensor)
-            self.sensor_service.add_reading_to_queue()
+            self.log.info(f"SENSOR_CONTROLLER:: Received new sensor read")
+            new_msg_from_sensor = Data_Received(**json.loads(new_msg_from_sensor.data.decode()))
+            self.sensor_service.add_reading_to_queue(new_msg_from_sensor)
         except TimeoutError as e:
             self.log.error(f"SENSOR_CONTROLLER:: Timeout while pushing read values to queue {e}")
         except ValueError as e:
@@ -46,14 +50,3 @@ class Sensor_Controller:
         except Exception as e:
             self.log.error(f"SENSOR_CONTROLLER:: Unhandled exception: {e}")
         return
-
-    
-    def push_readings_to_db(self):
-        try:
-            self.sensor_service.push_readings_to_db()
-        except TimeoutError as e:
-            self.log.error(f"SENSOR_CONTROLLER:: Timeout while pushing values to database {e}")
-        except IOError as e:
-            self.log.error(f"SENSOR_CONTROLLER:: I/O Err: {e}")
-        except Exception as e:
-            self.log.error(f"SENSOR_CONTROLLER:: Unhandled exception: {e}")

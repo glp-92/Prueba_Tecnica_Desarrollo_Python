@@ -20,9 +20,11 @@ class Sensor_Service:
         """
             Push all sensor values to database
         """
+        queue_len, i = self.sensor_read_queue.qsize(), 1
         while not self.sensor_read_queue.empty():
-            self.log.info("SENSOR_SERVICE:: Añadiendo lectura a DB")
-            self.add_new_reading_to_db(self.sensor_read_queue.get(timeout=0.1))        
+            self.log.info(f"SENSOR_SERVICE:: Adding sensor readings to DB. {i} - {queue_len}")
+            self.add_new_reading_to_db(self.sensor_read_queue.get(timeout=0.1))     
+            i += 1   
         return
 
     def add_new_reading_to_db(self, new_msg_from_sensor: Dict):

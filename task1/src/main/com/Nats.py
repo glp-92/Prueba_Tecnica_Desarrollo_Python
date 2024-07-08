@@ -53,7 +53,7 @@ class Nats_Client:
         async def on_reconnected():
             self.log.info(f'NATS_CLIENT_{self.client_id}:: Reconnection successful!')
 
-        async def on_close_conn(e):
+        async def on_close_conn():
             self.log.warning(f'NATS_CLIENT_{self.client_id}:: Connection closed!')
 
         async def on_error(e):
@@ -82,8 +82,7 @@ class Nats_Client:
             gracefully disconnects from server waiting for message completion
         """
         if self.nc.is_closed: return
-        await self.nc.close()
-        await asyncio.sleep(0)
+        await self.nc.drain()
         self.connection_status.connected_to_server = False
         return
 
@@ -102,11 +101,12 @@ class Nats_Client:
             self.log.warning(f'NATS_CLIENT_{self.client_id}:: Already subscribed to channel {channel_name}')
             return
         subscription = await self.nc.subscribe(channel_name, cb=on_msg_recv_callback)
+        await self.nc.flush()
         self.connection_status.listening_channels[channel_name] = {'subscription': subscription}
         self.log.info(f'NATS_CLIENT_{self.client_id}:: Successfully connected to channel {channel_name}')
 
 
-    async def unsuscribe_to_channel(self, channel_name: str):
+    async def unsubscribe_to_channel(self, channel_name: str):
         await self.connection_status.listening_channels[channel_name]['subscription'].unsubscribe()
         del self.connection_status.listening_channels[channel_name]
         return

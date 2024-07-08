@@ -19,7 +19,7 @@ class MySQL:
         self.db_url = db_url
         self.get_cfg_data()
         self.connect()
-        # err = self.setup() # llamada desde el main para controlar el error y cerrar el programa
+        err = self.setup() # llamada desde el main para controlar el error y cerrar el programa
 
     def get_cfg_data(self):
         self.db_name = os.environ.get('DB_NAME')

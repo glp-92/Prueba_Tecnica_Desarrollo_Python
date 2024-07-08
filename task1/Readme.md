@@ -82,24 +82,24 @@ Conexiones multiplexadas, un cliente se conecta a un servidor NATS, mediante el 
 - Se debe validar el formato y longitud de la lectura de datos por parte del consumidor antes de añadir la información a la base de datos (código malicioso contenido en los mensajes, overflow)
 - Otras validaciones de entrada se omitirán por limitaciones de tiempo (lectura de fichero de entorno, configuracion)
 - La detención y ejecución del programa, al no ser indicado el método, se producirá con señales producidas a través de entrada de teclado.
-- Se implementara una interfaz para MySQL, se puede utilizar `sql alchemy` como orm pero se utilizara `mysql-connector` en este caso, para simplificar
+- Se implementara una interfaz para MySQL, se puede utilizar `sql alchemy` como orm pero se utilizara `mysql-connector`
 
 
 ## Estructura del programa
 
-- cfg => contiene ficheros de configuracion de ser necesarios
 - log => directorio donde se almacenan los logs de programa
 - src => modulos de la aplicacion principal
   - main => contiene los módulos del programa principal.
     - main.py => ejecución principal. Contempla y valida los argumentos de entrada. Importa las dependencias y las inyecta en módulos de lógica atendiendo al principio de inversión de dependencia (en lugar de importar los módulos en las clases que se necesiten, se pasan por parámetros en la inicialización, favorenciendo la trazabilidad del programa). Crea el log, la configuración y lanza los ciclos de programa.
+    - mocked_publiser.py => ejecucion de sensor simulado. Se debería llamar desde el main en un subproceso.
     - util => directorio que contiene utilidades (modulo de lectura / escritura de ficheros)
     - log => directorio que contiene la declaración del logger
     - schemas => contiene contratos para validacion de datos
-    - exceptions => para excepciones personalizadas de existir
     - db => contiene la declaración de la clase de conexión a base de datos
     - data => contiene los repositorios de datos, funciones que abstraen el acceso a los datos independientemente del cliente de BBDD (si se migra base de datos, se cambia el contenido de las funciones y el cliente, pero los nombres permaneceran intactos)
     - controller => en diseño web en arquitectura limpia contiene los endpoints y las llamadas a la logica del programa. En este caso contendrá la lógica de las ejecuciones que se desee realizar
     - com => se plantea como como un directorio apropiado para la declaración de una clase `nats` que implemente funciones y módulos de utilidad
+    - scheduler_tasks => se añade este directorio para las tareas que se ejecuten programadas en la aplicacion, como el traspaso de informacion a la base de datos en este caso.
   - test => contendrá pruebas de integración (el ciclo se cumple con las interacciones de forma esperada). Las pruebas unitarias, de haberlas se ejecutarán en cada módulo por separado.
 - .env => en .gitignore para evitar leaks de informacion. Contiene variables de entorno que se estimen oportunas. Si el usuario del equipo se compromete, estas variables serán visibles a un posible atacante.
 
@@ -108,6 +108,19 @@ Conexiones multiplexadas, un cliente se conecta a un servidor NATS, mediante el 
 1. Se emplea `Anaconda` como gestor de librerias => `conda create -n natsclient python=3.10 anaconda`.
 2. Activar entorno en bash dentro de la raiz del programa => `conda activate natsclient`
 3. Instalar librerias que emplea la aplicacion `pip install -r requirements.txt`
+
+## Ejecucion
+
+Programa principal
+```bash
+cd src/main
+python main.py --mockupsensor=True --valrange=0-1000 --sensorfreq=1 --dburl=localhost
+```
+Sensor mockup
+```bash
+cd src/main
+python mocked_publisher.py
+```
 
 ## Referencias
 
